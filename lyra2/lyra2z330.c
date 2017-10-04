@@ -2,7 +2,7 @@
 #include "lyra2.h"
 #include "avxdefs.h"
 
-void lyra2z330_hash(char* output, const char* input, uint32_t len)
+void lyra2z330_hash(char* output, const char* input)
 {
 	uint64_t* lyra2z330_wholeMatrix;
 	uint32_t _ALIGN(256) hash[16];
