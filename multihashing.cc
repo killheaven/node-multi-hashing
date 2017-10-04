@@ -24,7 +24,8 @@ extern "C" {
     #include "sha1.h"
     #include "x15.h"
     #include "fresh.h"
-    #include "tribus.h"
+    #include "tribus.h",
+    #include "./lyra2/lyra2z330.h"
 }
 
 #include "boolberry.h"
@@ -552,6 +553,26 @@ NAN_METHOD(tribus) {
     info.GetReturnValue().Set(Nan::NewBuffer(output, 32).ToLocalChecked());
 }
 
+NAN_METHOD(lyra2z330) {
+    
+    if (info.Length() < 1)
+        return THROW_ERROR_EXCEPTION("You must provide one argument.");
+
+    Local<Object> target = Nan::To<Object>(info[0]).ToLocalChecked();
+
+    if(!Buffer::HasInstance(target))
+        return THROW_ERROR_EXCEPTION("Argument should be a buffer object.");
+
+    char * input = Buffer::Data(target);
+    char *output = (char*) malloc(sizeof(char) * 32);
+
+    uint32_t input_len = Buffer::Length(target);
+
+    lyra2z330_hash(input, output);
+
+    info.GetReturnValue().Set(Nan::NewBuffer(output, 32).ToLocalChecked());
+}
+
 NAN_MODULE_INIT(init) {
     Nan::Set(target, Nan::New("quark").ToLocalChecked(), Nan::GetFunction(Nan::New<FunctionTemplate>(quark)).ToLocalChecked());
     Nan::Set(target, Nan::New("x11").ToLocalChecked(), Nan::GetFunction(Nan::New<FunctionTemplate>(x11)).ToLocalChecked());
@@ -576,6 +597,40 @@ NAN_MODULE_INIT(init) {
     Nan::Set(target, Nan::New("x15").ToLocalChecked(), Nan::GetFunction(Nan::New<FunctionTemplate>(x15)).ToLocalChecked());
     Nan::Set(target, Nan::New("fresh").ToLocalChecked(), Nan::GetFunction(Nan::New<FunctionTemplate>(fresh)).ToLocalChecked());
     Nan::Set(target, Nan::New("tribus").ToLocalChecked(), Nan::GetFunction(Nan::New<FunctionTemplate>(fresh)).ToLocalChecked());
+    Nan::Set(target, Nan::New("lyra2z330").ToLocalChecked(), Nan::GetFunction(Nan::New<FunctionTemplate>(fresh)).ToLocalChecked());
 }
 
 NODE_MODULE(multihashing, init)
+
+/*
+const char* const algo_alias_map[][2] =
+{
+//   alias                proper
+  { "bitcore",           "timetravel10" },
+  { "blake256r8",        "blakecoin"    },
+  { "blake256r8vnl",     "vanilla"      },
+  { "blake256r14",       "blake"        },
+  { "blake256r14dcr",    "decred"       },
+  { "cryptonote",        "cryptonight"  },
+  { "cryptonight-light", "cryptolight"  },
+  { "diamond",           "dmd-gr"       },
+  { "droplp",            "drop"         },
+  { "espers",            "hmq1725"      },
+  { "flax",              "c11"          },
+  { "jackpot",           "jha"          },
+  { "jane",              "scryptjane"   }, 
+  { "lyra2",             "lyra2re"      },
+  { "lyra2v2",           "lyra2rev2"    },
+  { "lyra2zoin",         "lyra2z330"    },
+  { "myriad",            "myr-gr"       },
+  { "neo",               "neoscrypt"    },
+//  { "sia",               "blake2b"      },
+  { "sib",               "x11gost"      },
+  { "timetravel8",       "timetravel"   },
+  { "yes",               "yescrypt"     },
+  { "ziftr",             "zr5"          },
+  { "zcoin",             "lyra2z"       },
+  { "zoin",              "lyra2z330"    },
+  { NULL,                NULL           }   
+};
+*/ 
