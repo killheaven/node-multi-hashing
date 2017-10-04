@@ -25,7 +25,7 @@ extern "C" {
     #include "x15.h"
     #include "fresh.h"
     #include "tribus.h",
-    #include "./lyra2/lyra2z330.h"
+    #include "lyra2/lyra2z330.h"
 }
 
 #include "boolberry.h"
@@ -71,7 +71,7 @@ NAN_METHOD(x11) {
 
     uint32_t input_len = Buffer::Length(target);
 
-    x11_hash(input, output, input_len);
+    x11_hash(input, output, input_len, input_len);
 
     info.GetReturnValue().Set(Nan::NewBuffer(output, 32).ToLocalChecked());
 }
