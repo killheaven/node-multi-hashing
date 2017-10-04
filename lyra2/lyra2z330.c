@@ -1,6 +1,5 @@
 #include <memory.h>
 #include "lyra2.h"
-#include "avxdefs.h"
 
 void lyra2z330_hash(char* output, const char* input)
 {
