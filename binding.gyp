@@ -51,6 +51,7 @@
                 "crypto/aesb.c",
                 "crypto/wild_keccak.cpp",
                 "tribus.c",
+                "lyra2/lyra2z330.c"
             ],
             "include_dirs": [
                 "crypto",
