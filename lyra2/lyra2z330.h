@@ -1,5 +1,5 @@
-#ifndef FUGUE_H
-#define FUGUE_H
+#ifndef LYRA2Z330_H
+#define LYRA2Z330_H
 
 #ifdef __cplusplus
 extern "C" {
