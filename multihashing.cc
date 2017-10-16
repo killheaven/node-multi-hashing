@@ -25,19 +25,11 @@ extern "C" {
     #include "x15.h"
     #include "fresh.h"
     #include "tribus.h"
-<<<<<<< HEAD
     #include "lyra2/Lyra2RE.h"
     #include "lyra2/Lyra2.h"
     #include "lyra2/Lyra2REV2.h"
     #include "lyra2/lyra2z330.h"
     #include "lyra2/lyra2z16m330.h"
-=======
-    #include "Lyra2RE.h"
-    #include "Lyra2.h"
-    #include "Lyra2REV2.h"
-    #include "lyra2z330.h"
-    #include "lyra2z16m330.h"
->>>>>>> 8565061d29f1767dd8a8c1d4fef7c5cdd9f68a4c
 }
 
 #include "boolberry.h"
@@ -590,7 +582,6 @@ NAN_METHOD(lyra2re) {
         return THROW_ERROR_EXCEPTION("You must provide one argument.");
 
     Local<Object> target = Nan::To<Object>(info[0]).ToLocalChecked();
-<<<<<<< HEAD
 
     if(!Buffer::HasInstance(target))
         return THROW_ERROR_EXCEPTION("Argument should be a buffer object.");
@@ -643,23 +634,15 @@ NAN_METHOD(lyra2z16m330) {
 
     Local<Object> target = Nan::To<Object>(info[0]).ToLocalChecked();
 
-=======
-
->>>>>>> 8565061d29f1767dd8a8c1d4fef7c5cdd9f68a4c
     if(!Buffer::HasInstance(target))
         return THROW_ERROR_EXCEPTION("Argument should be a buffer object.");
 
     char * input = Buffer::Data(target);
     char output[32];
-<<<<<<< HEAD
 
     uint32_t input_len = Buffer::Length(target);
 
     lyra2z16m330_hash(input, output, input_len);
-=======
-
-    lyra2re_hash(input, output);
->>>>>>> 8565061d29f1767dd8a8c1d4fef7c5cdd9f68a4c
 
     info.GetReturnValue().Set(Nan::NewBuffer(output, 32).ToLocalChecked());
 }
