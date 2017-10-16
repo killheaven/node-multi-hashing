@@ -32,12 +32,12 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdio.h>
-#include "lyra2z330.h"
+#include "lyra2z16m330.h"
 #include "Lyra2.h"
 
-void lyra2z330_hash(const char* input, char* output, uint32_t len)
+void lyra2z16m330_hash(const char* input, char* output, uint32_t len)
 {
-	        uint32_t hashY[8];
+	        uint32_t hashY[16];
 
                 LYRA2(hashY, 32, input, 80, input, 80, 2, 330, 256);
 

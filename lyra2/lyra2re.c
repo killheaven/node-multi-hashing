@@ -1,166 +1,110 @@
-#include <memory.h>
+/*-
+ * Copyright 2009 Colin Percival, 2011 ArtForz, 2013 Neisklar, 2014 James Lovejoy
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ *
+ * This file was originally written by Colin Percival as part of the Tarsnap
+ * online backup system.
+ */
 
-#include "miner.h"
-#include "algo/blake/sph_blake.h"
-#include "algo/groestl/sph_groestl.h"
-#include "algo/skein/sph_skein.h"
-#include "algo/keccak/sph_keccak.h"
-#include "lyra2.h"
-#include "algo-gate-api.h"
-#include "avxdefs.h"
+#include "Lyra2RE.h"
+#include <stdlib.h>
+#include <stdint.h>
+#include <string.h>
+#include <stdio.h>
+#include "../sha3/sph_blake.h"
+#include "../sha3/sph_groestl.h"
+#include "../sha3/sph_cubehash.h"
+#include "../sha3/sph_bmw.h"
+#include "../sha3/sph_keccak.h"
+#include "../sha3/sph_skein.h"
+#include "Lyra2.h"
 
-#ifndef NO_AES_NI
-  #include "algo/groestl/aes_ni/hash-groestl256.h"
-#endif
-
-//__thread uint64_t* lyra2re_wholeMatrix;
-
-typedef struct {
-        sph_blake256_context     blake;
-        sph_keccak256_context    keccak;
-        sph_skein256_context     skein;
-#ifdef NO_AES_NI
-        sph_groestl256_context   groestl;
-#else
-        hashState_groestl256     groestl;
-#endif
-} lyra2re_ctx_holder;
-
-lyra2re_ctx_holder lyra2re_ctx;
-static __thread sph_blake256_context lyra2_blake_mid;
-
-void init_lyra2re_ctx()
+void lyra2re_hash(const char* input, char* output)
 {
-        sph_blake256_init(&lyra2re_ctx.blake);
-        sph_keccak256_init(&lyra2re_ctx.keccak);
-        sph_skein256_init(&lyra2re_ctx.skein);
-#ifdef NO_AES_NI
-        sph_groestl256_init(&lyra2re_ctx.groestl);
-#else
-        init_groestl256( &lyra2re_ctx.groestl, 32 );
-#endif
+    sph_blake256_context     ctx_blake;
+    sph_groestl256_context   ctx_groestl;
+    sph_keccak256_context    ctx_keccak;
+    sph_skein256_context     ctx_skein;
+
+    uint32_t hashA[8], hashB[8];
+
+    sph_blake256_init(&ctx_blake);
+    sph_blake256 (&ctx_blake, input, 80);
+    sph_blake256_close (&ctx_blake, hashA);
+
+    sph_keccak256_init(&ctx_keccak);
+    sph_keccak256 (&ctx_keccak,hashA, 32);
+    sph_keccak256_close(&ctx_keccak, hashB);
+
+	LYRA2((void*)hashA, 32, (const void*)hashB, 32, (const void*)hashB, 32, 1, 8, 8);
+
+	sph_skein256_init(&ctx_skein);
+    sph_skein256 (&ctx_skein, hashA, 32);
+    sph_skein256_close(&ctx_skein, hashB);
+
+    sph_groestl256_init(&ctx_groestl);
+    sph_groestl256 (&ctx_groestl, hashB, 32);
+    sph_groestl256_close(&ctx_groestl, hashA);
+
+	memcpy(output, hashA, 32);
 }
-
-void lyra2_blake256_midstate( const void* input )
+void lyra2re2_hash(const char* input, char* output)
 {
-    memcpy( &lyra2_blake_mid, &lyra2re_ctx.blake, sizeof lyra2_blake_mid );
-    sph_blake256( &lyra2_blake_mid, input, 64 );
+    sph_blake256_context ctx_blake;
+    sph_cubehash256_context ctx_cubehash;
+    sph_keccak256_context ctx_keccak;
+    sph_skein256_context ctx_skein;
+    sph_bmw256_context ctx_bmw;
+    
+    uint32_t hashA[8], hashB[8];
+    
+    sph_blake256_init(&ctx_blake);
+    sph_blake256(&ctx_blake, input, 80);
+    sph_blake256_close (&ctx_blake, hashA); 
+    
+    sph_keccak256_init(&ctx_keccak);
+    sph_keccak256(&ctx_keccak, hashA, 32); 
+    sph_keccak256_close(&ctx_keccak, hashB);
+    
+    sph_cubehash256_init(&ctx_cubehash);
+    sph_cubehash256(&ctx_cubehash, hashB, 32);
+    sph_cubehash256_close(&ctx_cubehash, hashA);
+    
+    LYRA2(hashB, 32, hashA, 32, hashA, 32, 1, 4, 4);
+    
+    sph_skein256_init(&ctx_skein);
+    sph_skein256(&ctx_skein, hashB, 32); 
+    sph_skein256_close(&ctx_skein, hashA);
+    
+    sph_cubehash256_init(&ctx_cubehash);
+    sph_cubehash256(&ctx_cubehash, hashA, 32);
+    sph_cubehash256_close(&ctx_cubehash, hashB);
+    
+    sph_bmw256_init(&ctx_bmw);
+    sph_bmw256(&ctx_bmw, hashB, 32);
+    sph_bmw256_close(&ctx_bmw, hashA);
+    
+    memcpy(output, hashA, 32);
 }
-
-void lyra2re_hash(void *state, const void *input)
-{
-        lyra2re_ctx_holder ctx __attribute__ ((aligned (64))) ;
-        memcpy(&ctx, &lyra2re_ctx, sizeof(lyra2re_ctx));
-
-	uint8_t _ALIGN(64) hash[32*8];
-        #define hashA hash
-        #define hashB hash+16
-
-        const int midlen = 64;            // bytes
-        const int tail   = 80 - midlen;   // 16
-
-        memcpy( &ctx.blake, &lyra2_blake_mid, sizeof lyra2_blake_mid );
-        sph_blake256( &ctx.blake, input + midlen, tail );
-
-	sph_blake256_close(&ctx.blake, hashA);
-
-	sph_keccak256(&ctx.keccak, hashA, 32);
-	sph_keccak256_close(&ctx.keccak, hashB);
-
-        LYRA2RE( hashA, 32, hashB, 32, hashB, 32, 1, 8, 8);
-//	LYRA2RE( lyra2re_wholeMatrix, hashA, 32, hashB, 32, hashB, 32, 1, 8, 8);
-
-	sph_skein256(&ctx.skein, hashA, 32);
-	sph_skein256_close(&ctx.skein, hashB);
-
-#ifdef NO_AES_NI
-	sph_groestl256( &ctx.groestl, hashB, 32 );
-	sph_groestl256_close( &ctx.groestl, hashA );
-#else
-        update_and_final_groestl256( &ctx.groestl, hashA, hashB, 256 );
-#endif
-
-	memcpy(state, hashA, 32);
-}
-
-int scanhash_lyra2re(int thr_id, struct work *work,
-	uint32_t max_nonce,	uint64_t *hashes_done)
-{
-        uint32_t *pdata = work->data;
-        uint32_t *ptarget = work->target;
-	uint32_t _ALIGN(64) endiandata[20];
-        uint32_t hash[8] __attribute__((aligned(64)));
-	const uint32_t first_nonce = pdata[19];
-	uint32_t nonce = first_nonce;
-        const uint32_t Htarg = ptarget[7];
-
-        swab32_array( endiandata, pdata, 20 );
-
-        lyra2_blake256_midstate( endiandata );
-
-	do {
-		be32enc(&endiandata[19], nonce);
-		lyra2re_hash(hash, endiandata);
-		if (hash[7] <= Htarg )
-                {
-                   if ( fulltest(hash, ptarget) )
-                   {
-			pdata[19] = nonce;
-			*hashes_done = pdata[19] - first_nonce;
-			return 1;
-                   }
-		}
-		nonce++;
-
-	} while (nonce < max_nonce && !work_restart[thr_id].restart);
-
-	pdata[19] = nonce;
-	*hashes_done = pdata[19] - first_nonce + 1;
-	return 0;
-}
-
-int64_t lyra2re_get_max64 ()
-{
-  return 0xffffLL;
-}
-
-void lyra2re_set_target ( struct work* work, double job_diff )
-{
-   work_set_target(work, job_diff / (128.0 * opt_diff_factor) );
-}
-
-/*
-bool lyra2re_thread_init()
-{
-   const int64_t ROW_LEN_INT64 = BLOCK_LEN_INT64 * 8; // nCols
-   const int64_t ROW_LEN_BYTES = ROW_LEN_INT64 * 8;
-
-   int i = (int64_t)ROW_LEN_BYTES * 8; // nRows;
-   lyra2re_wholeMatrix = _mm_malloc( i, 64 );
-
-   if ( lyra2re_wholeMatrix == NULL )
-     return false;
-
-#if defined (__AVX2__)
-   memset_zero_m256i( (__m256i*)lyra2re_wholeMatrix, i/32 );
-#elif defined(__AVX__)
-   memset_zero_m128i( (__m128i*)lyra2re_wholeMatrix, i/16 );
-#else
-   memset( lyra2re_wholeMatrix, 0, i );
-#endif
-   return true;
-}
-*/
-
-bool register_lyra2re_algo( algo_gate_t* gate )
-{
-  init_lyra2re_ctx();
-  gate->optimizations = SSE2_OPT | AES_OPT | AVX_OPT | AVX2_OPT;
-//  gate->miner_thread_init = (void*)&lyra2re_thread_init;
-  gate->scanhash   = (void*)&scanhash_lyra2re;
-  gate->hash       = (void*)&lyra2re_hash;
-  gate->get_max64  = (void*)&lyra2re_get_max64;
-  gate->set_target = (void*)&lyra2re_set_target;
-  return true;
-};
 

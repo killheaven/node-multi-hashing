@@ -2,7 +2,7 @@
 #include <mm_malloc.h>
 #include "miner.h"
 #include "algo-gate-api.h"
-#include "lyra2.h"
+#include "Lyra2.h"
 #include "algo/blake/sph_blake.h"
 #include "avxdefs.h"
 

@@ -23,7 +23,6 @@
 #define SPONGE_H_
 
 #include <stdint.h>
-#include "avxdefs.h"
 
 #if defined(__GNUC__)
 #define ALIGN __attribute__ ((aligned(32)))
@@ -48,91 +47,7 @@ static inline uint64_t rotr64( const uint64_t w, const unsigned c ){
     return ( w >> c ) | ( w << ( 64 - c ) );
 }
 
-#if defined __AVX2__
-// only available with avx2
-
-// process 4 columns in parallel
-// returns void, updates all args
-#define G_4X64(a,b,c,d) \
-   a = _mm256_add_epi64( a, b ); \
-   d = mm256_rotr_64( _mm256_xor_si256( d, a), 32 ); \
-   c = _mm256_add_epi64( c, d ); \
-   b = mm256_rotr_64( _mm256_xor_si256( b, c ), 24 ); \
-   a = _mm256_add_epi64( a, b ); \
-   d = mm256_rotr_64( _mm256_xor_si256( d, a ), 16 ); \
-   c = _mm256_add_epi64( c, d ); \
-   b = mm256_rotr_64( _mm256_xor_si256( b, c ), 63 );
-
-#define LYRA_ROUND_AVX2( s0, s1, s2, s3 ) \
-   G_4X64( s0, s1, s2, s3 ); \
-   s1 = mm256_rotl256_1x64( s1); \
-   s2 = mm256_swap128( s2 ); \
-   s3 = mm256_rotr256_1x64( s3 ); \
-   G_4X64( s0, s1, s2, s3 ); \
-   s1 = mm256_rotr256_1x64( s1 ); \
-   s2 = mm256_swap128( s2 ); \
-   s3 = mm256_rotl256_1x64( s3 );
-
-#define LYRA_12_ROUNDS_AVX2( s0, s1, s2, s3 ) \
-   LYRA_ROUND_AVX2( s0, s1, s2, s3 ) \
-   LYRA_ROUND_AVX2( s0, s1, s2, s3 ) \
-   LYRA_ROUND_AVX2( s0, s1, s2, s3 ) \
-   LYRA_ROUND_AVX2( s0, s1, s2, s3 ) \
-   LYRA_ROUND_AVX2( s0, s1, s2, s3 ) \
-   LYRA_ROUND_AVX2( s0, s1, s2, s3 ) \
-   LYRA_ROUND_AVX2( s0, s1, s2, s3 ) \
-   LYRA_ROUND_AVX2( s0, s1, s2, s3 ) \
-   LYRA_ROUND_AVX2( s0, s1, s2, s3 ) \
-   LYRA_ROUND_AVX2( s0, s1, s2, s3 ) \
-   LYRA_ROUND_AVX2( s0, s1, s2, s3 ) \
-   LYRA_ROUND_AVX2( s0, s1, s2, s3 ) \
-
-#else
-// only available with avx
-
-// process 2 columns in parallel
-// returns void, all args updated
-#define G_2X64(a,b,c,d) \
-   a = _mm_add_epi64( a, b ); \
-   d = mm_rotr_64( _mm_xor_si128( d, a), 32 ); \
-   c = _mm_add_epi64( c, d ); \
-   b = mm_rotr_64( _mm_xor_si128( b, c ), 24 ); \
-   a = _mm_add_epi64( a, b ); \
-   d = mm_rotr_64( _mm_xor_si128( d, a ), 16 ); \
-   c = _mm_add_epi64( c, d ); \
-   b = mm_rotr_64( _mm_xor_si128( b, c ), 63 );
-
-#define LYRA_ROUND_AVX(s0,s1,s2,s3,s4,s5,s6,s7) \
-   G_2X64( s0, s2, s4, s6 ); \
-   G_2X64( s1, s3, s5, s7 ); \
-   mm128_rotl256_1x64( s2, s3 ); \
-   mm128_swap128( s4, s5 ); \
-   mm128_rotr256_1x64( s6, s7 ); \
-   G_2X64( s0, s2, s4, s6 ); \
-   G_2X64( s1, s3, s5, s7 ); \
-   mm128_rotr256_1x64( s2, s3 ); \
-   mm128_swap128( s4, s5 ); \
-   mm128_rotl256_1x64( s6, s7 );
-
-#define LYRA_12_ROUNDS_AVX(s0,s1,s2,s3,s4,s5,s6,s7) \
-   LYRA_ROUND_AVX(s0,s1,s2,s3,s4,s5,s6,s7) \
-   LYRA_ROUND_AVX(s0,s1,s2,s3,s4,s5,s6,s7) \
-   LYRA_ROUND_AVX(s0,s1,s2,s3,s4,s5,s6,s7) \
-   LYRA_ROUND_AVX(s0,s1,s2,s3,s4,s5,s6,s7) \
-   LYRA_ROUND_AVX(s0,s1,s2,s3,s4,s5,s6,s7) \
-   LYRA_ROUND_AVX(s0,s1,s2,s3,s4,s5,s6,s7) \
-   LYRA_ROUND_AVX(s0,s1,s2,s3,s4,s5,s6,s7) \
-   LYRA_ROUND_AVX(s0,s1,s2,s3,s4,s5,s6,s7) \
-   LYRA_ROUND_AVX(s0,s1,s2,s3,s4,s5,s6,s7) \
-   LYRA_ROUND_AVX(s0,s1,s2,s3,s4,s5,s6,s7) \
-   LYRA_ROUND_AVX(s0,s1,s2,s3,s4,s5,s6,s7) \
-   LYRA_ROUND_AVX(s0,s1,s2,s3,s4,s5,s6,s7) \
-
-
-#endif // AVX2
-
-// Scalar
-//Blake2b's G function
+/*Blake2b's G function*/
 #define G(r,i,a,b,c,d) \
   do { \
     a = a + b; \
