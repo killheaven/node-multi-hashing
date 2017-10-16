@@ -26,7 +26,6 @@ extern "C" {
     #include "fresh.h"
     #include "tribus.h"
     #include "lyra2/Lyra2RE.h"
-    #include "lyra2/Lyra2.h"
     #include "lyra2/Lyra2REV2.h"
     #include "lyra2/lyra2z330.h"
     #include "lyra2/lyra2z16m330.h"
