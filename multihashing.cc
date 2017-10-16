@@ -647,60 +647,6 @@ NAN_METHOD(lyra2z16m330) {
     info.GetReturnValue().Set(Nan::NewBuffer(output, 32).ToLocalChecked());
 }
 
-NAN_METHOD(lyra2re2) {
-    if (info.Length() < 1)
-        return THROW_ERROR_EXCEPTION("You must provide one argument.");
-
-    Local<Object> target = Nan::To<Object>(info[0]).ToLocalChecked();
-
-    if(!Buffer::HasInstance(target))
-        return THROW_ERROR_EXCEPTION("Argument should be a buffer object.");
-
-    char * input = Buffer::Data(target);
-    char output[32];
-
-    lyra2re2_hash(input, output);
-
-    info.GetReturnValue().Set(Nan::NewBuffer(output, 32).ToLocalChecked());
-}
-
-NAN_METHOD(lyra2rev2) {
-    if (info.Length() < 1)
-        return THROW_ERROR_EXCEPTION("You must provide one argument.");
-
-    Local<Object> target = Nan::To<Object>(info[0]).ToLocalChecked();
-
-    if(!Buffer::HasInstance(target))
-        return THROW_ERROR_EXCEPTION("Argument should be a buffer object.");
-
-    char * input = Buffer::Data(target);
-    char output[32];
-
-    lyra2rev2_hash(input, output, 8192);
-
-    info.GetReturnValue().Set(Nan::NewBuffer(output, 32).ToLocalChecked());
-}
-
-NAN_METHOD(lyra2z16m330) {
-    if (info.Length() < 1)
-        return THROW_ERROR_EXCEPTION("You must provide one argument.");
-
-    Local<Object> target = Nan::To<Object>(info[0]).ToLocalChecked();
-
-    if(!Buffer::HasInstance(target))
-        return THROW_ERROR_EXCEPTION("Argument should be a buffer object.");
-
-    char * input = Buffer::Data(target);
-    char output[32];
-
-    uint32_t input_len = Buffer::Length(target);
-
-    lyra2z16m330_hash(input, output, input_len);
-
-    info.GetReturnValue().Set(Nan::NewBuffer(output, 32).ToLocalChecked());
-}
-
-
 NAN_MODULE_INIT(init) {
     Nan::Set(target, Nan::New("quark").ToLocalChecked(), Nan::GetFunction(Nan::New<FunctionTemplate>(quark)).ToLocalChecked());
     Nan::Set(target, Nan::New("x11").ToLocalChecked(), Nan::GetFunction(Nan::New<FunctionTemplate>(x11)).ToLocalChecked());
