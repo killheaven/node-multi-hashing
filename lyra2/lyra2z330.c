@@ -35,20 +35,33 @@
  #include "../sha3/sph_blake.h"
  #include "Lyra2.h"
  
- void lyra2z330_hash(const char* input, char* output, uint32_t len)
+ void lyra2z330_hash(const char* input, char* output, uint32_t height)
  {
-     sph_blake256_context     ctx_blake;
+	 uint32_t _ALIGN(256) hash[16];
+	 
+	 uint64_t* lyra2z330_wholeMatrix;
+
+		 LYRA2Z( lyra2z330_wholeMatrix, hash, 32, input, 80, input, 80,
+				  2, 330, 256 );
  
-     uint32_t hashA[8], hashB[8];
- 
-     sph_blake256_init(&ctx_blake);
-     sph_blake256 (&ctx_blake, input, 80);
-     sph_blake256_close (&ctx_blake, hashA);	
-     
-     LYRA2(hashB, 32, hashA, 32, hashA, 32, 2, 330, 256);
-     
-     memcpy(output, hashB, 32);
+	 memcpy(output, hash, 32);
  }
+ 
+
+//  void lyra2z330_hash(const char* input, char* output, uint32_t len)
+//  {
+//      sph_blake256_context     ctx_blake;
+ 
+//      uint32_t hashA[8], hashB[8];
+ 
+//      sph_blake256_init(&ctx_blake);
+//      sph_blake256 (&ctx_blake, input, 80);
+//      sph_blake256_close (&ctx_blake, hashA);	
+     
+//      LYRA2(hashB, 32, hashA, 32, hashA, 32, 2, 330, 256);
+     
+//      memcpy(output, hashB, 32);
+//  }
  
 
 // #include <memory.h>
