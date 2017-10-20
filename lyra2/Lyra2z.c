@@ -35,7 +35,7 @@
  #include "../sha3/sph_blake.h"
  #include "Lyra2.h"
  
- void lyra2z330_hash(const char* input, char* output, uint32_t len)
+ void lyra2z_hash(const char* input, char* output)
  {
      sph_blake256_context     ctx_blake;
  
@@ -45,35 +45,8 @@
      sph_blake256 (&ctx_blake, input, 80);
      sph_blake256_close (&ctx_blake, hashA);	
      
-     LYRA2(hashB, 32, hashA, 32, hashA, 32, 2, 330, 256);
+     LYRA2(hashB, 32, hashA, 32, hashA, 32, 8, 8, 8);
      
      memcpy(output, hashB, 32);
  }
  
-
-// #include <memory.h>
-// #include <stdlib.h>
-// #include <stdint.h>
-// #include <string.h>
-// #include <stdio.h>
-// #include "lyra2z330.h"
-// #include "Lyra2.h"
-
-
-// void lyra2z330_hash(const char* input, char* output, uint32_t len)
-// {
-// 	        uint32_t hashY[8];
-
-//             LYRA2(hashY, 32, input, 80, input, 80, 2, 330, 256);
-
-// 	        memcpy(output, hashY, 32);
-// }
-
-
-
-
-
-
-
-
-
