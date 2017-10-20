@@ -27,22 +27,45 @@
  * online backup system.
  */
 
-#include <memory.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <string.h>
-#include <stdio.h>
-#include "lyra2z16m330.h"
-#include "Lyra2.h"
+ #include "Lyra2z.h"
+ #include <stdlib.h>
+ #include <stdint.h>
+ #include <string.h>
+ #include <stdio.h>
+ #include "../sha3/sph_blake.h"
+ #include "Lyra2.h"
+ 
+ void lyra2z16m330_hash(const char* input, char* output, uint32_t len)
+ {
+     sph_blake256_context     ctx_blake;
+ 
+     uint32_t hashA[16], hashB[16];
+ 
+     sph_blake256_init(&ctx_blake);
+     sph_blake256 (&ctx_blake, input, 80);
+     sph_blake256_close (&ctx_blake, hashA);	
+     
+     LYRA2(hashB, 32, hashA, 32, hashA, 32, 2, 330, 256);
+     
+     memcpy(output, hashB, 32);
+ }
 
-void lyra2z16m330_hash(const char* input, char* output, uint32_t len)
-{
-	        uint32_t hashY[16];
+// #include <memory.h>
+// #include <stdlib.h>
+// #include <stdint.h>
+// #include <string.h>
+// #include <stdio.h>
+// #include "lyra2z16m330.h"
+// #include "Lyra2.h"
 
-                LYRA2(hashY, 32, input, 80, input, 80, 2, 330, 256);
+// void lyra2z16m330_hash(const char* input, char* output, uint32_t len)
+// {
+// 	        uint32_t hashY[16];
 
-	        memcpy(output, hashY, 32);
-}
+//                 LYRA2(hashY, 32, input, 80, input, 80, 2, 330, 256);
+
+// 	        memcpy(output, hashY, 32);
+// }
 
 
 
