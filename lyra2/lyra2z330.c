@@ -37,7 +37,7 @@
  
  void lyra2z330_hash(const char* input, char* output, uint32_t height)
  {
-	 uint32_t _ALIGN(256) hash[16];
+	 uint32_t hash[16];
 	 
 	 uint64_t* lyra2z330_wholeMatrix;
 
